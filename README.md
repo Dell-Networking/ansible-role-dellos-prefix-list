@@ -3,7 +3,7 @@ Prefix-list role
 
 This role facilitates the configuration of a prefix-list. It supports the configuration of an IP prefix-list, and assigns the prefix-list to line terminals. This role is abstracted for dellos9 and dellos10.
 
-The prefix-list role requires an SSH connection for connectivity to a Dell EMC Networking device. You can use any of the built-in OS connection variables or the ``provider`` dictionary.
+The prefix-list role requires an SSH connection for connectivity to a Dell EMC Networking device. You can use any of the built-in OS connection variables.
 
 Installation
 ------------
@@ -13,7 +13,7 @@ Installation
 Role variables
 --------------
 
-- Role is abstracted using the *ansible_net_os_name* variable that can take dellos9 and dellos10 values
+- Role is abstracted using the *ansible_network_os*/*ansible_net_os_name* variable that can take dellos9 and dellos10 values
 - If *dellos_cfg_generate* set to true, the variable generates the role configuration commands in a file
 - Any role variable with a corresponding state variable set to absent negates the configuration of that variable
 - Setting an empty value for any variable negates the corresponding configuration
@@ -42,17 +42,18 @@ Role variables
 Connection variables
 --------------------
 
-Ansible Dell EMC Networking roles require connection information to establish communication with the nodes in your inventory. This information can exist in the Ansible *group_vars* or *host_vars* directories, or in the playbook itself.
+Ansible Dell EMC Networking roles require connection information to establish communication with the nodes in your inventory. This information can exist in the Ansible *group_vars* or *host_vars* directories, or inventory or in the playbook itself.
 
 | Key         | Required | Choices    | Description                                         |
 |-------------|----------|------------|-----------------------------------------------------|
-| ``host`` | yes      |            | Specifies the hostname or address for connecting to the remote device over the specified transport) |
-| ``port`` | no       |            | Specifies the port used to build the connection to the remote device; if unspecified, the value defaults to 22  |
-| ``username`` | no       |            | Specifies the username that authenticates the CLI login to the remote device; if the value is unspecified, the ANSIBLE_NET_USERNAME environment variable value is used |
-| ``password`` | no       |            | Specifies the password that authenticates the connection to the remote device; if value is unspecified, the ANSIBLE_NET_PASSWORD environment variable value is used |
-| ``authorize`` | no       | yes, no\*   | Instructs the module to enter privileged mode on the remote device before sending any commands; if value is unspecified, the ANSIBLE_NET_AUTHORIZE environment variable value is used, and the device attempts to execute all commands in non-privileged mode . This key is supported only in dellos9 and dellos6. |
-| ``auth_pass`` | no       |            | Specifies the password to use if required to enter privileged mode on the remote device; if *authorize* is set to no this key is not applicable; if value is unspecified, the ANSIBLE_NET_AUTH_PASS environment variable value is used . This key is supported only in dellos9 and dellos6. |
-| ``provider`` | no       |            | Passes all connection arguments as a dictionary object; all constraints (such as required or choices) must be met either by individual arguments or values in this dictionary |
+| ``ansible_host`` | yes      |            | Specifies the hostname or address for connecting to the remote device over the specified transport |
+| ``ansible_port`` | no       |            | Specifies the port used to build the connection to the remote device; if value is unspecified, the ANSIBLE_REMOTE_PORT option is used; it defaults to 22 |
+| ``ansible_ssh_user`` | no       |            | Specifies the username that authenticates the CLI login for the connection to the remote device; if value is unspecified, the ANSIBLE_REMOTE_USER environment variable value is used  |
+| ``ansible_ssh_pass`` | no       |            | Specifies the password that authenticates the connection to the remote device.  |
+| ``ansible_become`` | no       | yes, no\*   | Instructs the module to enter privileged mode on the remote device before sending any commands; if value is unspecified, the ANSIBLE_BECOME environment variable value is used, and the device attempts to execute all commands in non-privileged mode |
+| ``ansible_become_method`` | no       | enable, sudo\*   | Instructs the module to allow the become method to be specified for handling privilege escalation; if value is unspecified, the ANSIBLE_BECOME_METHOD environment variable value is used. |
+| ``ansible_become_pass`` | no       |            | Specifies the password to use if required to enter privileged mode on the remote device; if ``ansible_become`` is set to no this key is not applicable. |
+| ``ansible_network_os`` | yes      | dellos6/dellos9/dellos10, null\*  | This value is used to load the correct terminal and cliconf plugins to communicate with the remote device. |
 
 > **NOTE**: Asterisk (\*) denotes the default value if none is specified.
 
@@ -64,7 +65,9 @@ The *dellos-prefix-list* role is built on modules included in the core Ansible c
 Example playbook
 ----------------
 
-This example uses the *dellos-prefix-list* role to configure prefix-list for both IPv4 and IPv6. It creates a *hosts* file with the switch details and corresponding variables. The hosts file should define the *ansible_net_os_name* variable with corresponding Dell EMC networking OS name. When *dellos_cfg_generate* is set to true, the variable generates the configuration commands as a .part file in *build_dir* path. By default, the variable is set to false. It writes a simple playbook that only references the *dellos-prefix-list* role. 
+This example uses the *dellos-prefix-list* role to configure prefix-list for both IPv4 and IPv6. It creates a *hosts* file with the switch details and corresponding variables. The hosts file should define the *ansible_network_os*/ *ansible_net_os_name* variable with corresponding Dell EMC networking OS name. 
+
+When *dellos_cfg_generate* is set to true, the variable generates the configuration commands as a .part file in *build_dir* path. By default, the variable is set to false. It writes a simple playbook that only references the *dellos-prefix-list* role. 
 
 **Sample hosts file**
  
@@ -73,12 +76,12 @@ This example uses the *dellos-prefix-list* role to configure prefix-list for bot
 **Sample host_vars/leaf1**
 
     hostname: leaf1
-    provider:
-      host: "{{ hostname }}"
-      username: xxxxx 
-      password: xxxxx
-      authorize: yes
-      auth_pass: xxxxx 
+    ansible_become: yes
+    ansible_become_method: xxxxx
+    ansible_become_pass: xxxxx
+    ansible_ssh_user: xxxxx
+    ansible_ssh_pass: xxxxx
+    ansible_network_os: dellos9
     build_dir: ../temp/dellos9
     dellos_prefixlist:
       - type: ipv4
