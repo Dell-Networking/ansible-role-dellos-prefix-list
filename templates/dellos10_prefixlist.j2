@@ -64,15 +64,22 @@ no {{ ip }} prefix-list  {{ val.name }} seq {{ rule.number }}
                         {% if rule.condition_list is defined and rule.condition_list %}
                         {% set condition_string = [' '] %}
                         {% set item = "" %}
-                          {% for condition in rule.condition_list if rule.condition_list | length > 1 %}
-                            {% if rule.condition_list[0].condition == "ge" and rule.condition_list[1].condition == "le" %}
-                            {% set item = condition_string[0] + condition.condition + ' ' + condition.prelen|string + ' ' %}
-                            {% endif %}
-                            {% if condition_string.insert(0,item) %} {% endif %}
+                          {% if rule.condition_list | length > 1 %}
+                            {% for condition in rule.condition_list %}
+                              {% if rule.condition_list[0].condition == "ge" and rule.condition_list[1].condition == "le" %}
+                              {% set item = condition_string[0] + condition.condition + ' ' + condition.prelen|string + ' ' %}
+                              {% endif %}
+                              {% if condition_string.insert(0,item) %} {% endif %}
+                            {% endfor %}
                           {% else %}
-                            {% set item = condition_string[0] + condition.condition + ' ' + condition.prelen|string + ' ' %}
-                            {% if condition_string.insert(0,item) %} {% endif %}
-                          {% endfor %}
+                            {% for condition in rule.condition_list %}
+                              {% if rule.condition_list[0].condition == "ge" or rule.condition_list[0].condition == "le" %}
+                              {% set item = condition_string[0] + condition.condition + ' ' + condition.prelen|string + ' '
+%}
+                              {% endif %}
+                              {% if condition_string.insert(0,item) %} {% endif %}
+                            {% endfor %}
+                          {% endif %}
 {{ ip }} prefix-list {{ val.name }} seq {{ rule.number }} {{ is_permit }} {{ rule.net_num }}/{{ rule.mask }}{{ condition_string[0] }} 
                         {% else %}
 {{ ip }} prefix-list {{ val.name }} seq {{ rule.number}} {{ is_permit }} {{ rule.net_num }}/{{ rule.mask }}
