@@ -1,6 +1,5 @@
 ---
 # vars file for Dell-Networking.dellos-prefix-list, below gives a sample configuration
-
 # Sample variables for dellos9 device
 dellos_prefixlist:
   - type: ipv4
@@ -49,4 +48,3 @@ dellos_prefixlist:
              prelen: 18
          state: present
      state: present
-
